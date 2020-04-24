@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: sonatype-nexus
+  #namespace: touch-star
+  annotations:
+        kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+  - hosts:
+    - docker.touch-star.cn
+    - nexus.touch-star.cn
+    secretName: ingress-touch-star-tls-secret
+  rules:
+  - host: nexus.touch-star.cn
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sonatype-nexus
+          servicePort: 8081
+  - host: docker.touch-star.cn
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sonatype-nexus
+          servicePort: 5000

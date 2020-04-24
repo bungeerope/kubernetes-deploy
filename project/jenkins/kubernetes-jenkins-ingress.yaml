@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+   name: jenkins-server
+   namespace: kube-system
+spec:
+   rules:
+   - host: jenkins-touchstar.ezlink-wifi.com
+     http:
+       paths:
+       - path: /
+         backend:
+          serviceName: jenkins-server
+          servicePort: 8080
+   - host: jnlp-touchstar.ezlink-wifi.com
+     http:
+       paths:
+       - path: /
+         backend:
+           serviceName: jenkins-server
+           servicePort: 50000

@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-service-scheduler
+  labels:
+    app: cloud-service-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-service-scheduler
+  template:
+    metadata:
+      labels:
+        app: cloud-service-scheduler
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: cloud-service-scheduler
+          image: touchstar.ezlink-wifi.com:30883/docker_private/cloud-service-scheduler:1.0
+          volumeMounts:
+            - name: service-log-storage-data
+              mountPath: /data/logs
+          ports:
+            - name: server
+              containerPort: 5010
+            - name: scheduler
+              containerPort: 5011
+            - name: management
+              containerPort: 8081
+          env:
+            - name: EUREKA_NAME
+              value: "eureka"
+            - name: APP_NAME
+              value: "cloud-service-scheduler"
+            - name: JVM_OPS
+              value: "
+                      -Duser.timezone=Asia/Shanghai
+                      -Xmx640m
+                      -Xms640m
+                      -Xmn256m
+                      -XX:SurvivorRatio=8
+                      -XX:MaxTenuringThreshold=10
+                      -XX:MetaspaceSize=128m
+                     "
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: APP_OPTS
+              value: "
+                     --spring.application.name=${APP_NAME}
+                     --registerWithEureka=true
+                     --fetchRegistry=true
+                     --feign.debug.devicecontrol
+                     --feign.debug.launcher
+                     --feign.debug.artmarket
+                     --feign.debug.media
+                     --feign.debug.tsvod
+                     --feign.debug.tslive
+                     --feign.debug.passport
+                     --feign.debug.persistence
+                     --feign.debug.addedvalue
+                     --logback.logName=${POD_NAME}
+                     --eureka.instance.instance-id=${POD_NAME}
+                     --eureka.instance.hostname=${APP_NAME}
+                     --eureka.instance.preferIpAddress=false
+                     --eureka.client.serviceUrl.defaultZone=http://eureka-0.${EUREKA_NAME}:8080/eureka/,http://eureka-1.${EUREKA_NAME}:8080/eureka/,http://eureka-2.${EUREKA_NAME}:8080/eureka/
+                     "
+      volumes:
+        - name: service-log-storage-data
+          persistentVolumeClaim:
+            claimName: service-log-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-service-scheduler
+  labels:
+    app: cloud-service-scheduler
+spec:
+  type: ClusterIP
+  ports:
+    - name: server
+      port: 5010
+      targetPort: 5010
+      protocol: TCP
+    - name: scheduler
+      port: 5011
+      targetPort: 5011
+      protocol: TCP
+  selector:
+    app: cloud-service-scheduler

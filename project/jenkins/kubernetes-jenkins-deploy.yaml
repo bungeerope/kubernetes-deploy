@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-server
+  labels:
+    app: jenkins-server
+spec:
+  selector:
+    matchLabels:
+      app: jenkins-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jenkins-server
+    spec:
+      serviceAccountName: jenkins
+      containers:
+      - name: jenkins-server
+        image: registry.cn-shanghai.aliyuncs.com/mydlq/jenkins:2.172
+        securityContext:                     
+          runAsUser: 0       #设置以ROOT用户运行容器
+          privileged: true   #拥有特权
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: jnlp
+          containerPort: 50000
+        #resources:
+        #  limits:
+        #    memory: 2Gi
+        #    cpu: "1000m"
+        #  requests:
+        #    memory: 1Gi
+        #    cpu: "500m"
+        env:
+        - name: LIMITS_MEMORY
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              divisor: 1Mi
+        - name: "JAVA_OPTS"  #设置变量，指定时区和 jenkins slave 执行者设置
+          value: " 
+                   -Xmx$(LIMITS_MEMORY)m 
+                   -XshowSettings:vm 
+                   -Dhudson.slaves.NodeProvisioner.initialDelay=0
+                   -Dhudson.slaves.NodeProvisioner.MARGIN=50
+                   -Dhudson.slaves.NodeProvisioner.MARGIN0=0.85
+                   -Duser.timezone=Asia/Shanghai
+                 "    
+        - name: "JENKINS_OPTS"
+          value: "--prefix=/jenkins"         #设置路径前缀加上 Jenkins
+        volumeMounts:                        #设置要挂在的目录
+        - name: data
+          mountPath: /var/jenkins_home
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: jenkins-server      #设置PVC

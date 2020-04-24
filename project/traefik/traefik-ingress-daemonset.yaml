@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: traefik
+  namespace: kube-system
+  labels:
+    k8s-app: traefik-ingress-lb
+spec:
+  selector:
+    matchLabels:
+      k8s-app: traefik-ingress-lb
+  template:
+    metadata:
+      labels:
+        k8s-app: traefik-ingress-lb
+        name: traefik-ingress-lb
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
+      tolerations:
+      - operator: "Exists"
+      containers:
+      - image: traefik:v2.0.7
+        name: traefik-ingress-lb
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 1000m
+            memory: 1024Mi
+        ports:
+        - name: web
+          containerPort: 80
+          hostPort: 80
+        - name: websecure
+          containerPort: 443
+          hostPort: 443
+        - name: mysql
+          containerPort: 3306
+          hostPort: 3306
+        - name: redis
+          containerPort: 6379
+          hostPort: 6379
+        - name: admin
+          containerPort: 8080
+          hostPort: 8080
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+        args:
+        - --entrypoints.web.Address=:80
+        - --entrypoints.websecure.Address=:443
+        - --entrypoints.mysql.Address=:3306
+        - --entrypoints.redis.Address=:6379
+        - --providers.kubernetescrd
+        - --api
+        - --api.dashboard=true
+        - --api.insecure=true
+        - --metrics.prometheus=true
+        - --tracing.zipkin=true
+        - --accesslog
+        - --accesslog.filepath=/var/log/access.log
+      nodeSelector:
+        edgenode: "true"
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  selector:
+    k8s-app: traefik-ingress-lb
+  ports:
+    - name: admin
+      port: 8080
+      protocol: TCP

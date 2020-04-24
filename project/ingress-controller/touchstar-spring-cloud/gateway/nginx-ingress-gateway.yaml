@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  name: nginx-ingress-spring-cloud-gateway
+  namespace: touch-star-cloud
+spec:
+  rules:
+    - host: touchstar.ezlink-wifi.com
+      http:
+        paths:
+          - backend:
+              serviceName: cloud-gateway-server
+              servicePort: 9500
+            path: /

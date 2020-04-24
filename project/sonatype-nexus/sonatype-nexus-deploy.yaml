@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonatype-nexus
+  labels:
+    app: sonatype-nexus
+spec:
+  type: NodePort
+  ports:
+  - name: sonatype-nexus
+    port: 8081
+    nodePort: 30881
+    targetPort: 8081
+    protocol: TCP
+  - name: sonatype-docker
+    port: 5000
+    nodePort: 30500
+    targetPort: 5000
+    protocol: TCP
+  - name: sonatype-docker-hosted
+    port: 8082
+    nodePort: 30882
+    targetPort: 8082
+    protocol: TCP
+  - name: sonatype-docker-proxy
+    port: 8083
+    nodePort: 30883
+    targetPort: 8083
+    protocol: TCP
+  selector:
+    app: sonatype-nexus
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonatype-nexus
+  labels:
+    app: sonatype-nexus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonatype-nexus
+  template:
+    metadata:
+      labels:
+        app: sonatype-nexus
+    spec:
+      containers:
+      - name: sonatype-nexus
+        image: sonatype/nexus3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081
+        - containerPort: 8082
+        - containerPort: 8083
+        - containerPort: 5000
+        resources:
+          limits: 
+            cpu: 1000m
+            memory: 2048Mi
+          requests:
+            cpu: 500m
+            memory: 1024Mi
+        volumeMounts:
+          - name: sonatype-nexus-data
+            mountPath: /nexus-data
+      volumes:
+        - name: sonatype-nexus-data
+          persistentVolumeClaim:
+            claimName: sonatype-nexus 
+

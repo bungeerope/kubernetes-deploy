@@ -1,0 +1,10 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: kafka-pdb
+  namespace: dcp-k8s-dev
+spec:
+  selector:
+    matchLabels:
+      app: kafka
+  maxUnavailable: 1

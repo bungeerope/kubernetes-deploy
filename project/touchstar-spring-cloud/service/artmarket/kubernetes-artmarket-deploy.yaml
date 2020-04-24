@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-service-artmarket
+  labels:
+    app: cloud-service-artmarket
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-service-artmarket
+  template:
+    metadata:
+      labels:
+        app: cloud-service-artmarket
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: cloud-service-artmarket
+          image: touchstar.ezlink-wifi.com:30883/docker_private/cloud-service-artmarket:1.1
+          volumeMounts:
+            - name: service-log-storage-data
+              mountPath: /data/logs/
+          ports:
+            - name: server
+              containerPort: 5002
+            - name: management
+              containerPort: 8081
+          env:
+            - name: EUREKA_NAME
+              value: "eureka"
+            - name: APP_NAME
+              value: "cloud-service-artmarket"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: APP_OPTS
+              value: "
+                     --spring.application.name=${APP_NAME}
+                     --registerWithEureka=true
+                     --fetchRegistry=true
+                     --feign.debug.url
+                     --feign.debug.passport
+                     --logback.logName=${POD_NAME}
+                     --eureka.instance.instance-id=${POD_NAME}
+                     --eureka.instance.hostname=${APP_NAME}
+                     --eureka.instance.preferIpAddress=false
+                     --eureka.client.serviceUrl.defaultZone=http://eureka-0.${EUREKA_NAME}:8080/eureka/,http://eureka-1.${EUREKA_NAME}:8080/eureka/,http://eureka-2.${EUREKA_NAME}:8080/eureka/
+                     "
+      volumes:
+        - name: service-log-storage-data
+          persistentVolumeClaim:
+            claimName: service-log-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-service-artmarket
+  labels:
+    app: cloud-service-artmarket
+spec:
+  type: ClusterIP
+  ports:
+    - name: server
+      port: 5002
+      targetPort: 5002
+      protocol: TCP
+  selector:
+    app: cloud-service-artmarket

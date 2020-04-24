@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-server-dep
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-server-dep
+  template:
+    metadata:
+      labels:
+        app: prometheus-server-dep
+    spec:
+      containers:
+      - image: prom/prometheus:v2.3.2
+        name: prometheus
+        command:
+        - "/bin/prometheus"
+        args:
+        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--storage.tsdb.path=/prometheus"
+        - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+        - "--web.console.templates=/usr/share/prometheus"
+        - "--storage.tsdb.retention=30d"
+        - "--web.enable-lifecycle"
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/prometheus"
+          name: data
+        - mountPath: "/etc/prometheus/prometheus.yml"
+          name: server-config-volume
+          subPath: prometheus.yml
+        - mountPath: "/etc/prometheus/rule.yml"
+          name: rule-config-volume
+          subPath: rule.yml
+      serviceAccountName: prometheus
+      imagePullSecrets:
+        - name: regsecret
+      volumes:
+      - name: data
+        emptyDir: {}
+      - name: server-config-volume
+        configMap:
+          name: prometheus-server-config
+      - name: rule-config-volume
+        configMap:
+          name: prometheus-server-rule-config

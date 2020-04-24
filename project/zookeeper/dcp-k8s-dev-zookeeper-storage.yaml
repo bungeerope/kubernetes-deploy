@@ -1,0 +1,15 @@
+  apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    namespace: dcp-k8s-dev
+    name: zookeeper-storage
+    labels:
+      app: zookeeper-storage
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "dcp-k8s-dev-data"
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi

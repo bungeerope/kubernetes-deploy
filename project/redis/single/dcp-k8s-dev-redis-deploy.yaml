@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-pod
+  namespace: dcp-k8s-dev
+spec:
+  selector:
+    matchLabels:
+      app: redis-pod
+  template:
+    metadata:
+      labels:
+        app: redis-pod
+    spec:
+      containers:
+      - name: redis-pod
+        image: redis:5.0.8
+        command:
+          - "redis-server"
+        args:
+          - "/etc/redis/redis.conf"
+        ports:
+        - containerPort: 4000
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        - name: redis-config
+          mountPath:  /etc/redis/redis.conf
+          subPath: redis.conf
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-storage
+      - name: redis-config
+        configMap:
+            name: redis-config
