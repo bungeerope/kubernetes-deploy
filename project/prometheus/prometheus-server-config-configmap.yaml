@@ -6,39 +6,35 @@ metadata:
 data:
   prometheus.yml: |
     global:
-      scrape_interval:     30s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-      evaluation_interval: 30s # Evaluate rules every 15 seconds. The default is every 1 minute.
+      scrape_interval: 30s
+      evaluation_interval: 30s
       scrape_timeout: 30s
-      
-    # Alertmanager configuration
     alerting:
       alertmanagers:
       - static_configs:
-    	- targets: ["x.x.com:80"]
-    	
+      - targets: ["x.x.com:80"]
     rule_files:
       - "/etc/prometheus/rule.yml"
-      
     scrape_configs:
       - job_name: 'federate-k8scluster-1'
-    	scrape_interval: 30s
-    	honor_labels: true
-    	metrics_path: '/federate'
-    	params:
-    	  'match[]':
-    		- '{job=~"kubernetes-.*"}'
-    	static_configs:
-    	  - targets: ['prometheus:9090']
-    		labels:
-    		  k8scluster: xxxx-k8s
+      scrape_interval: 30s
+      honor_labels: true
+      metrics_path: '/federate'
+      params:
+        'match[]':
+        - '{job=~"kubernetes-.*"}'
+      static_configs:
+        - targets: ['prometheus:9090']
+        labels:
+          k8scluster: xxxx-k8s
       - job_name: 'federate-k8scluster-2'
-    	scrape_interval: 30s
-    	honor_labels: true
-    	metrics_path: '/federate'
-    	params:
-    	  'match[]':
-    		- '{job=~"kubernetes-.*"}'
-    	static_configs:
-    	  - targets: ['prometheus:9090']
-    		labels:
-    		  k8scluster: yyyy-k8s
+      scrape_interval: 30s
+      honor_labels: true
+      metrics_path: '/federate'
+      params:
+        'match[]':
+        - '{job=~"kubernetes-.*"}'
+      static_configs:
+        - targets: ['prometheus:9090']
+        labels:
+          k8scluster: yyyy-k8s
