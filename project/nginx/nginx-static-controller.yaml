@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcp-nginx-ts
+  namespace: dcp-nginx
+  labels:
+    app: dcp-nginx-ts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dcp-nginx-ts
+  template:
+    metadata:
+      labels:
+        app: dcp-nginx-ts
+    spec:
+      terminationGracePeriodSeconds: 10
+      nodeSelector:
+        kubernetes.io/hostname: "node6"
+      containers:
+        - name: dcp-nginx-ts
+          image: nginx
+          volumeMounts:
+            - name: nginx-static-storage
+              mountPath: /data/dcp_transcode
+            - name: dcp-nginx-ts-dataa
+              mountPath: /dataa
+            - name: dcp-nginx-ts-datab
+              mountPath: /datab
+            - name: dcp-nginx-ts-datac
+              mountPath: /datac   
+            - name: dcp-nginx-ts-datac
+              mountPath: /data/log/nginx       
+            - name: nginx-static-etc
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          ports:
+            - containerPort: 80
+            - containerPort: 87
+      volumes:
+        - name: dcp-nginx-ts-dataa
+          hostPath:
+            path: /dataa
+            type: Directory
+        - name: dcp-nginx-ts-datab
+          hostPath:
+            path: /datab
+            type: Directory
+        - name: dcp-nginx-ts-datac
+          hostPath:
+            path: /datac
+            type: Directory                    
+        - name: nginx-static-storage
+          hostPath:
+            path: /data/dcp_transcode
+            type: Directory  
+        - name: nginx-static-log
+          hostPath:
+            path: /data/log/nginx
+            type: Directory              
+        - name: nginx-static-etc
+          configMap:
+            name: nginx-static-etc
+            items:
+            - key: nginx.conf
+              path: nginx.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcp-nginx-ts
+  namespace: dcp-nginx
+  labels:
+    app: dcp-nginx-ts
+spec:
+  type: ClusterIP
+  ports:
+    - name: server
+      port: 80
+      targetPort: 80
+    - name: dcp-ts
+      port: 87
+      targetPort: 87
+  selector:
+    app: dcp-nginx-ts

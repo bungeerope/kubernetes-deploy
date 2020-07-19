@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  namespace: dcp-nginx
+  name: dcp-nginx-static-route
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`*.videodmic.cloudp.cc`)&&(PathPrefix(`/m3u8`)||PathPrefix(`/dataa`)||PathPrefix(`/datab`)||PathPrefix(`/datac`))
+    kind: Rule
+    services:
+      - name: dcp-nginx-ts
+        port: 80

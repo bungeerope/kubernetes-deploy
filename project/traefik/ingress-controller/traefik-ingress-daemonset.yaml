@@ -66,7 +66,7 @@ spec:
         - --accesslog
         - --accesslog.filepath=/var/log/access.log
       nodeSelector:
-        edgenode: "true"
+        kubernetes.io/hostname: "node6"
 
 ---
 
