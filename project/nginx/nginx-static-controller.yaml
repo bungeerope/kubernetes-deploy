@@ -74,7 +74,6 @@ metadata:
   labels:
     app: dcp-nginx-ts
 spec:
-  type: ClusterIP
   ports:
     - name: server
       port: 80
