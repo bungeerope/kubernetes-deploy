@@ -1,6 +1,0 @@
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: dcp-k8s-dev-data
-  namespace: dcp-k8s-dev
-provisioner: dcp/ifs

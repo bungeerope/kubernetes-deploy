@@ -1,0 +1,34 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: dcp
+  namespace: elastic-system
+spec:
+  version: 7.10.0
+  nodeSets:
+    - name: elasticesearch
+      count: 3
+      config:
+        node.master: true
+        node.data: true
+        node.ingest: true
+        index.store.type: niofs
+      podTemplate:
+        spec:
+          serviceAccount: es-nfs-provisioner-account
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+              command: [ 'sh', '-c', 'sysctl -w vm.max_map_count=262144' ]
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+            annotations:
+              volume.beta.kubernetes.io/storage-class: "es-storage-data"
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 100Gi

@@ -13,8 +13,8 @@ spec:
   - hard
   - nfsvers=4.1
   nfs:
-    server: 118.144.105.2
-    path: /nfs/data/nexus
+    server: 124.193.37.7
+    path: /data/nfs/sonatype
 
 ---
 kind: PersistentVolumeClaim

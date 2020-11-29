@@ -1,0 +1,38 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: es-nfs-provisioner
+  namespace: elastic-system
+  labels:
+    app: es-nfs-provisioner
+spec:
+  selector:
+    matchLabels:
+      app: es-nfs-provisioner
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: es-nfs-provisioner
+    spec:
+      containers:
+        - name: es-nfs-provisioner
+          image: quay.io/external_storage/nfs-client-provisioner:latest
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /
+              subPath: es
+          env:
+            - name: PROVISIONER_NAME
+              value: es/ifs
+            - name: NFS_SERVER
+              value: 124.193.37.7
+            - name: NFS_PATH
+              value: /data/nfs/storage-class
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 124.193.37.7
+            path: /data/nfs/storage-class
+          
