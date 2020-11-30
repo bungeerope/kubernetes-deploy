@@ -1,18 +1,27 @@
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
-  name: dcp
+  name: elasticsearch
   namespace: elastic-system
 spec:
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
   version: 7.10.0
   nodeSets:
-    - name: elasticesearch
-      count: 3
+    - name: master
+      count: 1
       config:
-        node.master: true
-        node.data: true
-        node.ingest: true
-        index.store.type: niofs
+        node.roles:
+          - "master"
+        xpack.ml.enabled: true
+        xpack.security.enabled: false
+        xpack.monitoring.enabled: false
+        discovery.seed_hosts:
+          - "elasticsearch-es-transport.elastic-system.svc.cluster.local:9300"
+        cluster.initial_master_nodes:
+          - "elasticsearch-es-master-0"
       podTemplate:
         spec:
           serviceAccount: es-nfs-provisioner-account
@@ -21,6 +30,16 @@ spec:
               securityContext:
                 privileged: true
               command: [ 'sh', '-c', 'sysctl -w vm.max_map_count=262144' ]
+          containers:
+            - name: elasticsearch
+              env:
+                - name: ES_JAVA_OPTS
+                  value: -Xms1g -Xmx1g
+              resources:
+                requests:
+                  memory: 2Gi
+                limits:
+                  memory: 2Gi
       volumeClaimTemplates:
         - metadata:
             name: elasticsearch-data
@@ -31,4 +50,47 @@ spec:
               - ReadWriteOnce
             resources:
               requests:
-                storage: 100Gi
+                storage: 5Gi
+    - name: data
+      count: 3
+      config:
+        node.roles:
+          - "data"
+          - "ingest"
+          - "ml"
+          - "transform"
+        xpack.security.enabled: false
+        xpack.monitoring.enabled: false
+        discovery.seed_hosts:
+          - "elasticsearch-es-transport.elastic-system.svc.cluster.local:9300"
+        cluster.initial_master_nodes:
+          - "elasticsearch-es-master-0"
+      podTemplate:
+        spec:
+          serviceAccount: es-nfs-provisioner-account
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+              command: [ 'sh', '-c', 'sysctl -w vm.max_map_count=262144' ]
+          containers:
+            - name: elasticsearch
+              env:
+                - name: ES_JAVA_OPTS
+                  value: -Xms1g -Xmx1g
+              resources:
+                requests:
+                  memory: 2Gi
+                limits:
+                  memory: 2Gi
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+            annotations:
+              volume.beta.kubernetes.io/storage-class: "es-storage-data"
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 50Gi

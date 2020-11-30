@@ -1,0 +1,22 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  namespace: elastic-system
+  name: elastic
+spec:
+  entryPoints:
+    - websecure
+  tls:
+    secretName: elastic-secret
+  routes:
+    - match: Host(`es.k8s.cloudp.cc`)
+      kind: Rule
+      services:
+        - name: elasticsearch-es-elasticesearch
+          port: 9200
+    - match: Host(`kibana.k8s.cloudp.cc`)
+        kind: Rule
+        services:
+          - name: kibana-kb-http
+            port: 5601
+    

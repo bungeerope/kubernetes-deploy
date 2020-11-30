@@ -1,10 +1,27 @@
-apiVersion: kibana.k8s.elastic.co/v1alpha1
+apiVersion: kibana.k8s.elastic.co/v1
 kind: Kibana
 metadata:
   name: kibana
   namespace: elastic-system
 spec:
-  version: 7.2.0
-  nodeCount: 1
+  version: 7.10.0
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
   elasticsearchRef:
-    name: elastic
+    namespace: elastic-system
+    name: "elasticsearch"
+  count: 1
+  config:
+    elasticsearch.requestHeadersWhitelist:
+      - authorization
+    elasticsearch.requestTimeout: 360000
+    elasticsearch.url:
+      - http://elasticsearch-es-master.elastic-system.svc:9200
+    elasticsearch.username: elastic
+  secureSettings:
+    - secretName: kibana-elasticsearch-credentials
+    ## 通过一下命令创建secret用于访问elasticsearch
+    # `kubectl create secret -n elastic-system generic kibana-elasticsearch-credentials --from-literal=elasticsearch.password=$(kubectl -n elastic-system get secret elasticsearch-es-elastic-user -o go-template="{{.data.elastic | base64decode}}")`
+    
